@@ -37,7 +37,7 @@ exports.loginUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+      sameSite: "None",
       maxAge: 60 * 60 * 1000 * 24,
     });
 
@@ -131,13 +131,8 @@ exports.updateUser = async (req, res) => {
 
 exports.auth = async (req, res) => {
   try {
-    // Log all incoming cookies
-    console.log("Incoming cookies:", req.cookies);
-
-    // Extract the token from cookies
     const token = req.cookies.token;
     if (!token) {
-      console.log("Token is missing in cookies");
       return res
         .status(401)
         .json({ message: "Unauthorized: No token provided" });
@@ -145,23 +140,16 @@ exports.auth = async (req, res) => {
 
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Token decoded successfully:", decoded);
-
-    // Send success response
     res.status(200).json({ message: "Authenticated", user: decoded });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      console.log("Token has expired");
       return res.status(401).json({ message: "Unauthorized: Token expired" });
     }
 
-    // Log other errors
-    console.error("Auth error:", error.message, {
-      cookies: req.cookies,
-      headers: req.headers,
-    });
-
-    // Send unauthorized response with error details
-    res.status(401).json({ message: `Unauthorized: ${error.message}` });
+    // Handle Other Errors
+    console.log(`Auth error: ${error.message}`); // Log only the error message
+    // log the token in the console
+    console.log(req.cookies.token);
+    res.status(401).json({ message: `Unauthorized: ${req.cookies.token}` });
   }
 };

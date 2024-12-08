@@ -17,7 +17,11 @@ app.use(cookieParser()); // Parse cookies
 // CORS setup
 app.use(
   cors({
-    origin: [process.env.CLIENT_URL, process.env.CLIENT_URL_LOCAL],
+    origin: [
+      "https://meleti-app.vercel.app",
+      process.env.CLIENT_URL,
+      process.env.CLIENT_URL_LOCAL,
+    ],
     credentials: true, // Allow cookies
   })
 );
