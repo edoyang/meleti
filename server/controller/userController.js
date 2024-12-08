@@ -37,9 +37,8 @@ exports.loginUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
+      sameSite: "strict",
       maxAge: 60 * 60 * 1000 * 24,
-      domain: ".vercel.app",
     });
 
     // Include timer-related data in the response
