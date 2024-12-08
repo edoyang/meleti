@@ -21,8 +21,14 @@ const Music = ({ currentState, isRunning, onReset }: MusicProps) => {
     const fetchMusic = async () => {
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_BASE_URL}/music`
+          `${import.meta.env.VITE_API_BASE_URL}/music`,
+          {
+            credentials: "include", // Include cookies in the request
+          }
         );
+        if (!response.ok) {
+          throw new Error(`Error ${response.status}: ${response.statusText}`);
+        }
         const data = await response.json();
 
         const shuffledList: {
