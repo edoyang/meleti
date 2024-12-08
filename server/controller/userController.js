@@ -148,6 +148,8 @@ exports.auth = async (req, res) => {
 
     // Handle Other Errors
     console.log(`Auth error: ${error.message}`); // Log only the error message
-    res.status(401).json({ message: "Unauthorized" });
+    // log the token in the console
+    console.log(req.cookies.token);
+    res.status(401).json({ message: `Unauthorized: ${req.cookies.token}` });
   }
 };
