@@ -35,12 +35,10 @@ exports.loginUser = async (req, res) => {
 
     // Set the token as an HTTP-only cookie
     res.cookie("token", token, {
-      httpOnly: true, // Prevent JavaScript access
-      secure: process.env.NODE_ENV === "production", // Use HTTPS in production
-      sameSite: "None", // Required for cross-origin cookies
-      maxAge: 60 * 60 * 1000 * 24, // 1 day
-      path: "/", // Accessible for all routes
-      domain: ".vercel.app", // Share across subdomains
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 60 * 60 * 1000 * 24,
     });
 
     // Include timer-related data in the response
