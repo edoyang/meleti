@@ -30,7 +30,7 @@ exports.loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" }
+      { expiresIn: "24h" } // Token expiration
     );
 
     // Set the token as an HTTP-only cookie
@@ -38,12 +38,12 @@ exports.loginUser = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "None",
-      maxAge: 60 * 60 * 1000 * 24,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
       domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
       path: "/",
     });
 
-    // Include timer-related data in the response
+    // Send user info in the response
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -51,13 +51,13 @@ exports.loginUser = async (req, res) => {
         username: user.username,
         email: user.email,
         uni: user.uni,
-        p_timer: user.p_timer, // Add this
-        p_break: user.p_break, // Add this
-        p_long_break: user.p_long_break, // Add this
+        p_timer: user.p_timer, // Pomodoro timer
+        p_break: user.p_break, // Short break duration
+        p_long_break: user.p_long_break, // Long break duration
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("Login error:", error.message);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -148,10 +148,7 @@ exports.auth = async (req, res) => {
       return res.status(401).json({ message: "Unauthorized: Token expired" });
     }
 
-    // Handle Other Errors
-    console.log(`Auth error: ${error.message}`); // Log only the error message
-    // log the token in the console
-    console.log(req.cookies.token);
-    res.status(401).json({ message: `Unauthorized: ${req.cookies.token}` });
+    console.error("Auth error:", error.message);
+    res.status(401).json({ message: "Unauthorized" });
   }
 };
