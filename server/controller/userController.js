@@ -39,6 +39,8 @@ exports.loginUser = async (req, res) => {
       secure: process.env.NODE_ENV === "production",
       sameSite: "None",
       maxAge: 60 * 60 * 1000 * 24,
+      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : "",
+      path: "/",
     });
 
     // Include timer-related data in the response
