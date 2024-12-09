@@ -1,18 +1,15 @@
 require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
-const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const userRoutes = require("./routes/userRoutes");
 const musicRoutes = require("./routes/musicRoutes");
 const connectDB = require("./config/db");
 
-// Initialize Express app
 const app = express();
 
 // Middleware
 app.use(express.json()); // Parse JSON bodies
-app.use(cookieParser()); // Parse cookies
 
 // CORS setup
 app.use(
@@ -22,7 +19,7 @@ app.use(
       process.env.CLIENT_URL,
       process.env.CLIENT_URL_LOCAL,
     ],
-    credentials: true, // Allow cookies
+    credentials: true, // Allow credentials such as Authorization headers
   })
 );
 
@@ -30,8 +27,8 @@ app.use(
 connectDB();
 
 // Routes
-app.use("/api/users", userRoutes);
-app.use("/api/music", musicRoutes);
+app.use("/api/users", userRoutes); // User-related routes
+app.use("/api/music", musicRoutes); // Music-related routes
 
 // Root Route
 app.get("/", (req, res) => {

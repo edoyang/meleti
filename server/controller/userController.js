@@ -2,64 +2,6 @@ const bcrypt = require("bcrypt");
 const User = require("../model/user");
 const jwt = require("jsonwebtoken");
 
-exports.loginUser = async (req, res) => {
-  try {
-    const { identifier, password } = req.body;
-
-    // Validate input
-    if (!identifier || !password) {
-      return res.status(400).json({ message: "All fields are required" });
-    }
-
-    // Find user by username or email
-    const user = await User.findOne({
-      $or: [{ username: identifier }, { email: identifier }],
-    });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // Compare passwords
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(401).json({ message: "Invalid password" });
-    }
-
-    // Generate JWT token
-    const token = jwt.sign(
-      { id: user._id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" }
-    );
-
-    // Set the token as an HTTP-only cookie
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "None",
-      maxAge: 60 * 60 * 1000 * 24,
-    });
-
-    // Include timer-related data in the response
-    res.status(200).json({
-      message: "Login successful",
-      user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        uni: user.uni,
-        p_timer: user.p_timer, // Add this
-        p_break: user.p_break, // Add this
-        p_long_break: user.p_long_break, // Add this
-      },
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server error" });
-  }
-};
-
 // Register a new user
 exports.registerUser = async (req, res) => {
   try {
@@ -98,6 +40,56 @@ exports.registerUser = async (req, res) => {
   }
 };
 
+exports.loginUser = async (req, res) => {
+  try {
+    const { identifier, password } = req.body;
+
+    if (!identifier || !password) {
+      return res
+        .status(400)
+        .json({ message: "Identifier and password are required" });
+    }
+
+    // Check if identifier is an email or username
+    const query = identifier.includes("@")
+      ? { email: identifier }
+      : { username: identifier };
+
+    const user = await User.findOne(query);
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ message: "Invalid credentials" });
+    }
+
+    // Generate a JWT token
+    const token = jwt.sign({ userId: user._id }, process.env.SECRET_KEY, {
+      expiresIn: "24h",
+    });
+
+    // Return user data along with the token
+    res.status(200).json({
+      token,
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        uni: user.uni,
+        p_timer: user.p_timer,
+        p_break: user.p_break,
+        p_long_break: user.p_long_break,
+      },
+      message: "Login successful",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.updateUser = async (req, res) => {
   try {
     const { id } = req.params; // Extract user ID from URL parameters
@@ -129,26 +121,24 @@ exports.updateUser = async (req, res) => {
   }
 };
 
-exports.auth = async (req, res) => {
+// Authenticate Token Middleware
+exports.authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res
+      .status(401)
+      .json({ message: "Access denied. No token provided." });
+  }
+
+  const token = authHeader.split(" ")[1];
+
   try {
-    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]; // Check for token in cookies or Authorization header
-
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No token provided" });
-    }
-
-    // Verify the token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("Authenticated user:", decoded);
-    res.status(200).json({ message: "Authenticated", user: decoded });
+    const decoded = jwt.verify(token, process.env.SECRET_KEY);
+    req.user = decoded;
+    next();
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Unauthorized: Token expired" });
-    }
-
-    console.error("Auth error:", error.message); // Log the error for debugging
-    res.status(401).json({ message: "Unauthorized" });
+    console.error("Token validation error:", error);
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
