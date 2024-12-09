@@ -8,6 +8,7 @@ import University from "./pages/University";
 import Header from "./components/Header";
 import { jwtDecode } from "jwt-decode";
 import useAxiosInterceptors from "./hooks/useAxiosInterceptors";
+import Register from "./pages/Register";
 
 // Mock function to check authentication status
 const isAuthenticated = () => {
@@ -39,6 +40,7 @@ function App() {
         <Routes>
           {/* Public Route */}
           <Route path="/login" Component={Login} />
+          <Route path="/register" Component={Register} />
 
           {/* Protected Routes */}
           <Route path="/" element={<ProtectedRoute Component={Home} />} />
