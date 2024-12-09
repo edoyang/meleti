@@ -22,6 +22,8 @@ const Login = () => {
   const { checkAuth } = useAuthContext();
   const dispatch = useDispatch(); // Redux dispatch hook
 
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -36,10 +38,16 @@ const Login = () => {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/users/login`,
         formData,
-        { withCredentials: true }
+        { withCredentials: !isMobile } // Disable `withCredentials` on mobile
       );
 
       setMessage("Login successful!");
+
+      const token = response.data.token; // Get the token from the response
+      if (isMobile) {
+        // Store token in local storage for mobile
+        localStorage.setItem("token", token);
+      }
 
       // Dispatch user data to Redux
       dispatch(

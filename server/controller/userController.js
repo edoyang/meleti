@@ -30,7 +30,7 @@ exports.loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: "24h" } // Token expiration
+      { expiresIn: "24h" }
     );
 
     // Set the token as an HTTP-only cookie
@@ -38,12 +38,10 @@ exports.loginUser = async (req, res) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "None",
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
-      domain: process.env.NODE_ENV === "production" ? ".vercel.app" : undefined,
-      path: "/",
+      maxAge: 60 * 60 * 1000 * 24,
     });
 
-    // Send user info in the response
+    // Include timer-related data in the response
     res.status(200).json({
       message: "Login successful",
       user: {
@@ -51,13 +49,13 @@ exports.loginUser = async (req, res) => {
         username: user.username,
         email: user.email,
         uni: user.uni,
-        p_timer: user.p_timer, // Pomodoro timer
-        p_break: user.p_break, // Short break duration
-        p_long_break: user.p_long_break, // Long break duration
+        p_timer: user.p_timer, // Add this
+        p_break: user.p_break, // Add this
+        p_long_break: user.p_long_break, // Add this
       },
     });
   } catch (error) {
-    console.error("Login error:", error.message);
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -133,7 +131,8 @@ exports.updateUser = async (req, res) => {
 
 exports.auth = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1]; // Check for token in cookies or Authorization header
+
     if (!token) {
       return res
         .status(401)
@@ -142,13 +141,14 @@ exports.auth = async (req, res) => {
 
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    console.log("Authenticated user:", decoded);
     res.status(200).json({ message: "Authenticated", user: decoded });
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Unauthorized: Token expired" });
     }
 
-    console.error("Auth error:", error.message);
+    console.error("Auth error:", error.message); // Log the error for debugging
     res.status(401).json({ message: "Unauthorized" });
   }
 };

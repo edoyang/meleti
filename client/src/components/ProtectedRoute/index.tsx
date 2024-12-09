@@ -4,7 +4,10 @@ import { useAuthContext } from "../../context/AuthContext";
 const ProtectedRoute = () => {
   const { isAuthenticated } = useAuthContext();
 
-  if (isAuthenticated === null) return <div>Loading...</div>; // Show loading until AuthProvider finishes
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
+  }
+
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" />;
 };
 
