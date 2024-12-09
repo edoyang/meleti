@@ -4,25 +4,13 @@ import { setSettings } from "../../redux/Slices/pomodoroSlice"; // Pomodoro slic
 import axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthContext } from "../../context/AuthContext";
-
-interface LoginForm {
-  identifier: string;
-  password: string;
-}
 
 const Login = () => {
-  const [formData, setFormData] = useState<LoginForm>({
-    identifier: "",
-    password: "",
-  });
+  const [formData, setFormData] = useState({ identifier: "", password: "" });
   const [message, setMessage] = useState<string>("");
 
   const navigate = useNavigate();
-  const { checkAuth } = useAuthContext();
-  const dispatch = useDispatch(); // Redux dispatch hook
-
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  const dispatch = useDispatch();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -37,17 +25,14 @@ const Login = () => {
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_BASE_URL}/users/login`,
-        formData,
-        { withCredentials: !isMobile } // Disable `withCredentials` on mobile
+        formData
       );
 
       setMessage("Login successful!");
 
-      const token = response.data.token; // Get the token from the response
-      if (isMobile) {
-        // Store token in local storage for mobile
-        localStorage.setItem("token", token);
-      }
+      // Store token (can be replaced with a safer storage solution like memory or cookies)
+      const token = response.data.token;
+      localStorage.setItem("token", token);
 
       // Dispatch user data to Redux
       dispatch(
@@ -68,7 +53,6 @@ const Login = () => {
         })
       );
 
-      await checkAuth(); // Call auth check if needed
       setTimeout(() => navigate("/"), 1000);
     } catch (error: any) {
       console.error("Login failed:", error.response?.data || error.message);
